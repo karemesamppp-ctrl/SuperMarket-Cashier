@@ -1,144 +1,100 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
-namespace SuperMarketCashier
+class Program
 {
-    class Product
+    static void Main()
     {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public decimal Price { get; set; }
-        public int Quantity { get; set; }
+        Console.WriteLine("=================================");
+        Console.WriteLine("  SuperMarket Cashier - PRO v2    ");
+        Console.WriteLine("  Kareem Store - Deir Al Balah   ");
+        Console.WriteLine("=================================");
+        Console.WriteLine();
 
-        public Product(int id, string name, decimal price, int qty)
+        double total = 0;
+        List<string> fatoura = new List<string>();
+
+        // قاعدة بيانات صغيرة للباركود
+        Dictionary<string, string> products = new Dictionary<string, string>();
+        products.Add("123", "Cola - 5");
+        products.Add("456", "Bread - 3");
+        products.Add("789", "Milk - 8");
+
+        while (true)
         {
-            Id = id;
-            Name = name;
-            Price = price;
-            Quantity = qty;
-        }
+            Console.Write("Enter barcode OR product name (or done): ");
+            string input = Console.ReadLine();
 
-        public void Show()
-        {
-            Console.WriteLine($"{Id}. {Name} | Price: {Price} ILS | Stock: {Quantity}");
-        }
-    }
-
-    class Program
-    {
-        static List<Product> products = new List<Product>()
-        {
-            new Product(1, "Cola", 5, 50),
-            new Product(2, "Chips", 4, 100),
-            new Product(3, "Chocolate", 7, 30),
-            new Product(4, "Bread", 3, 80),
-            new Product(5, "Milk", 9, 20),
-        };
-
-        static decimal totalSales = 0;
-
-        static void Main(string[] args)
-        {
-            Console.OutputEncoding = System.Text.Encoding.UTF8;
-            Console.InputEncoding = System.Text.Encoding.UTF8;
-
-            while (true)
+            if (input == "done")
             {
-                Console.Clear();
-                Console.WriteLine("===== SuperMarket - Cashier =====");
-                Console.WriteLine($"Today Sales: {totalSales} ILS");
-                Console.WriteLine("---------------------------------");
-                Console.WriteLine("1. Show Products");
-                Console.WriteLine("2. Sell Product (Invoice)");
-                Console.WriteLine("3. Add New Product");
-                Console.WriteLine("4. Search Product");
-                Console.WriteLine("5. Save Sales Report");
-                Console.WriteLine("0. Exit");
-                Console.Write("\nChoose: ");
-                string choice = Console.ReadLine();
-
-                if (choice == "1") ShowProducts();
-                else if (choice == "2") Sell();
-                else if (choice == "3") AddProduct();
-                else if (choice == "4") Search();
-                else if (choice == "5") SaveReport();
-                else if (choice == "0") break;
+                break;
             }
+
+            string name = input;
+            double price = 0;
+
+            // لو دخل باركود موجود، جيب السعر لحاله
+            if (products.ContainsKey(input))
+            {
+                string[] parts = products[input].Split('-');
+                name = parts[0].Trim();
+                price = Convert.ToDouble(parts[1].Trim());
+                Console.WriteLine("Found: " + name + " Price: " + price);
+            }
+            else
+            {
+                Console.Write("Enter price: ");
+                price = Convert.ToDouble(Console.ReadLine());
+            }
+
+            Console.Write("Enter quantity: ");
+            int qty = Convert.ToInt32(Console.ReadLine());
+
+            double sum = price * qty;
+            total += sum;
+
+            fatoura.Add(name + " - " + price + " * " + qty + " = " + sum);
+            Console.WriteLine("Added! Current total: " + total);
+            Console.WriteLine("---------------------------------");
         }
 
-        static void ShowProducts()
+        Console.WriteLine();
+        Console.WriteLine("========== RECEIPT ==========");
+        Console.WriteLine("Date: " + DateTime.Now);
+        Console.WriteLine("Store: Kareem Store");
+        Console.WriteLine("-----------------------------");
+        foreach (string item in fatoura)
         {
-            Console.Clear();
-            Console.WriteLine("--- Products ---");
-            foreach (var p in products) p.Show();
-            Console.WriteLine("\nPress any key to go back...");
-            Console.ReadKey();
+            Console.WriteLine(item);
         }
+        Console.WriteLine("-----------------------------");
+        Console.WriteLine("Total: " + total);
 
-        static void Sell()
+        double discount = 0;
+        if (total >= 100)
         {
-            Console.Clear();
-            Console.WriteLine("--- New Sale ---");
-            foreach (var p in products) p.Show();
-
-            Console.Write("\nEnter Product ID: ");
-            int id = int.Parse(Console.ReadLine());
-            var prod = products.FirstOrDefault(p => p.Id == id);
-            if (prod == null) { Console.WriteLine("Not Found!"); Console.ReadKey(); return; }
-
-            Console.Write("Enter Quantity: ");
-            int qty = int.Parse(Console.ReadLine());
-
-            if (qty > prod.Quantity) { Console.WriteLine("Not enough stock!"); Console.ReadKey(); return; }
-
-            decimal total = prod.Price * qty;
-            prod.Quantity -= qty;
-            totalSales += total;
-
-            Console.WriteLine("\n===== INVOICE =====");
-            Console.WriteLine($"Product: {prod.Name}");
-            Console.WriteLine($"Qty: {qty} | Price: {prod.Price}");
-            Console.WriteLine($"Total: {total} ILS");
-            Console.WriteLine("Thank you!");
-            Console.ReadKey();
+            discount = total * 0.10;
+            Console.WriteLine("Discount 10%: -" + discount);
+            total = total - discount;
+            Console.WriteLine("Total after discount: " + total);
         }
 
-        static void AddProduct()
-        {
-            Console.Clear();
-            Console.Write("Product Name: ");
-            string name = Console.ReadLine();
-            Console.Write("Price: ");
-            decimal price = decimal.Parse(Console.ReadLine());
-            Console.Write("Quantity: ");
-            int qty = int.Parse(Console.ReadLine());
+        Console.WriteLine("-----------------------------");
+        Console.Write("Enter amount paid: ");
+        double paid = Convert.ToDouble(Console.ReadLine());
 
-            int newId = products.Max(p => p.Id) + 1;
-            products.Add(new Product(newId, name, price, qty));
-            Console.WriteLine("Added Successfully!");
-            Console.ReadKey();
-        }
+        double rest = paid - total;
+        Console.WriteLine("Change: " + rest);
+        Console.WriteLine("=============================");
+        Console.WriteLine("Thank you for visiting!");
 
-        static void Search()
-        {
-            Console.Clear();
-            Console.Write("Enter Product Name: ");
-            string s = Console.ReadLine();
-            var found = products.Where(p => p.Name.ToLower().Contains(s.ToLower())).ToList();
-            if (found.Count == 0) Console.WriteLine("Nothing found");
-            else foreach (var p in found) p.Show();
-            Console.ReadKey();
-        }
+        // حفظ البيعة في ملف
+        string saleLine = DateTime.Now + " | Total: " + total + " | Paid: " + paid;
+        File.AppendAllText("sales.txt", saleLine + Environment.NewLine);
+        Console.WriteLine("Sale saved to sales.txt!");
 
-        static void SaveReport()
-        {
-            string report = $"Report {DateTime.Now} - Sales: {totalSales} ILS\n";
-            File.AppendAllText("report.txt", report);
-            Console.WriteLine("Report saved in report.txt");
-            Console.WriteLine($"Total Sales: {totalSales}");
-            Console.ReadKey();
-        }
+        Console.WriteLine("Press any key to exit...");
+        Console.ReadKey();
     }
 }
